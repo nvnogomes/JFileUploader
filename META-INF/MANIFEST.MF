@@ -1,0 +1,8 @@
+Manifest-Version: 201506.26
+Application-Name: Java File Uploader
+Permissions: all-permissions
+Caller-Allowable-Codebase: *
+Codebase: *
+Application-Library-Allowable-Codebase: *
+Created-By: NVG
+Main-Class: com.nvg.core.JFileUploaderApplet

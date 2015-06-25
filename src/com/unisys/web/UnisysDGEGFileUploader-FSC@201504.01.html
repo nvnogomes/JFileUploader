@@ -1,0 +1,299 @@
+<style type="text/css">
+	#uploaderContents p{margin-top:0}#uploaderContents a{color:#1eaedb}#uploaderContents a:hover{color:#0fa0ce}
+	#uploaderContents .button,#uploaderContents button,#uploaderContents input[type="submit"],#uploaderContents input[type="reset"],#uploaderContents input[type="button"]{display:inline-block;height:38px;padding:0 30px;color:#555;text-align:center;font-size:11px;font-weight:600;line-height:38px;letter-spacing:.1rem;text-transform:uppercase;text-decoration:none;white-space:nowrap;background-color:transparent;border-radius:4px;border:1px solid #bbb;cursor:pointer;box-sizing:border-box}
+	#uploaderContents .button:hover,#uploaderContents button:hover,#uploaderContents input[type="submit"]:hover,#uploaderContents input[type="reset"]:hover,#uploaderContents input[type="button"]:hover,#uploaderContents .button:focus,#uploaderContents button:focus,#uploaderContents input[type="submit"]:focus,#uploaderContents input[type="reset"]:focus,#uploaderContents input[type="button"]:focus{color:#333;border-color:#888;outline:0}
+	#uploaderContents .button.button-primary,#uploaderContents button.button-primary,#uploaderContents input[type="submit"].button-primary,#uploaderContents input[type="reset"].button-primary,#uploaderContents input[type="button"].button-primary{color:#FFF;background-color:#33c3f0;border-color:#33c3f0}
+	#uploaderContents .button.button-primary:hover,#uploaderContents button.button-primary:hover,#uploaderContents input[type="submit"].button-primary:hover,#uploaderContents input[type="reset"].button-primary:hover,#uploaderContents input[type="button"].button-primary:hover,#uploaderContents .button.button-primary:focus,#uploaderContents button.button-primary:focus,#uploaderContents input[type="submit"].button-primary:focus,#uploaderContents input[type="reset"].button-primary:focus,#uploaderContents input[type="button"].button-primary:focus{color:#FFF;background-color:#1eaedb;border-color:#1eaedb}
+	#uploaderContents th,#uploaderContents td{padding:12px 15px;text-align:left;border-bottom:1px solid #e1e1e1}
+	#uploaderContents th:first-child,#uploaderContents td:first-child{padding-left:0}
+	#uploaderContents th:last-child,#uploaderContents td:last-child{padding-right:0}
+	#uploaderContents button,#uploaderContents .button{margin-bottom:1rem}#uploaderContents table,#uploaderContents p{margin-bottom:2.5rem}
+	.u-full-width{width:100%;box-sizing:border-box}.u-max-full-width{max-width:100%;box-sizing:border-box}
+	.u-pull-right{float:right}.u-pull-left{float:left}#uploaderContents hr{margin-top:3rem;margin-bottom:3.5rem;border-width:0;border-top:1px solid #e1e1e1}
+	#uploaderContents .container:after,#uploaderContents .row:after,#uploaderContents .u-cf{content:"";display:table;clear:both}
+</style>
+
+<style type="text/css">
+	#uploaderContents {margin: 10px auto; width: 700px;}
+	#uploaderContents #waitMessage {background:#ffffff url(http://ptlis-bpm-fsc/DGEGUploader/waiting.gif) no-repeat center 35px;width:150px;height:40px;z-index:10; margin: -140px auto 20px;padding: 10px;border-radius: 5px; text-align: center;}
+	#uploaderContents .hidden{display:none}#uploaderContents .restrict{overflow:hidden;text-overflow:ellipsis;word-wrap:break-word;white-space:nowrap}
+	#uploaderContents button{margin-bottom:0}#uploaderContents h1{font-size:20px;font-variant:small-caps;margin-bottom:0}
+	#uploaderContents button[disabled],#uploaderContents button[disabled]:hover{background:#eee;border-color:#ccc;cursor:default;text-shadow:none;}
+	#uploaderContents h1 {margin-left:40px}
+	#uploaderContents #placeholder{border:1px solid gray;border-radius:3px;padding:10px;width:600px;margin: 0 auto;}
+	#uploaderContents #placeholder button{display:inline-block;margin-right:4px;padding:0 15px}
+	#uploaderContents #controls{margin-bottom:10px}#uploaderContents #controls button.right{float:right}
+	#uploaderContents table{table-layout:fixed}#uploaderContents table td{height:40px;padding:12px 5px}
+	#uploaderContents table th.buttonCol{width:110px !important}#uploaderContents table th.name{width:350px}
+	#uploaderContents table th.stat{width:70px}
+</style>
+
+<div id="uploaderContents">
+	<!-- COO.XXX.XXX.X.XXXXXX -->
+	<input type="hidden" id="InputCOO" value="<%venv_object%>"/>
+	<!-- http://ptlis-bpm-fsc/fsc/fscdav/wsdl?WEBSVC=COO.102.606.1.1015732 -->
+	<input type="hidden" id="InputWSU" value="<%venv_url%>"/>
+	<!-- c:\import\ -->
+	<input type="hidden" id="InputDIR" value="<%venv_dir%>"/>
+	<input type="hidden" id="InputVIW" value="<%venv_view%>"/>
+
+	<h1>Envio de ficheiros</h1>
+	<div id="placeholder">
+		<div id="controls">
+			<button id="addFile" disabled="disabled" onclick="window.controlObject.addFileToList(event)">Adicionar ficheiro</button>
+			<button id="sendBtn" class="button-primary right" disabled="disabled"  onclick="window.controlObject.uploadFiles(event)">Enviar</button>
+			<!-- <button id="cancelBtn" class="right" onclick="window.controlObject.closeWindow(event)">Fechar</button> -->
+		</div>
+
+		<table class="u-full-width">
+			<thead>
+			<tr>
+				<th class="buttonCol"></th>
+				<th class="restrict name">Nome</th>
+				<th class="stat">Estado</th>
+			</tr>
+			</thead>
+			<tbody id="files">
+			<tr id="default">
+				<td id="noFiles" colspan="3">Nenhum documento selecionado para envio.</td>
+			</tr>
+			</tbody>
+		</table>
+	</div>
+	<p id="waitMessage">A iniciar aplicação</p>
+	<div id="appletWrapper"></div>
+</div> <!-- uploader contents -->
+	<script type="text/javascript" defer="defer">
+
+	// object with methods called by the applet
+	if(!window.controlObject) {
+		window.controlObject = {
+			config : {
+				DEBUG: true,
+				fileToUpload : 0,
+				fileCounter : 0,
+				appletReady : false,
+				fileDetails : new Array(),
+				inObjCOO : '',
+				inObjWSU : '',
+				inObjDIR : '',
+				inObjVIW : ''
+			},
+			appletReady: function () {
+				var me = window.controlObject;
+				me.config.appletReady = true;
+				// javascript does not allow suicide of elements
+				var element = document.getElementById('waitMessage');
+				element.parentNode.removeChild(element);
+				document.getElementById('addFile').removeAttribute('disabled');
+				if (me.config.fileToUpload > 0) {
+					document.getElementById('sendBtn').removeAttribute('disabled');
+				}
+				me.feedback("Applet GUI OK");
+				document.body.style.cursor="default";
+			},
+			feedback: function(status) {
+				var me = window.controlObject;
+				if (me.config.DEBUG && typeof console !== 'undefined') {
+					console.log("jApplet: "+ status);
+				}
+			},
+			readVariables: function() {
+				var me = window.controlObject;
+				me.feedback("Reading variables");
+				me.config.inObjCOO = document.getElementById("InputCOO").getAttribute('value');
+				me.config.inObjWSU = document.getElementById("InputWSU").getAttribute('value');
+				me.config.inObjDIR = document.getElementById('InputDIR').getAttribute('value');
+				me.config.inObjVIW = document.getElementById('InputVIW').getAttribute('value');
+
+				if( me.config.inObjDIR == null || me.config.inObjDIR == "" ) {
+					me.config.inObjDIR = "c:/import/";
+				}
+			},
+			createApplet: function() {
+				if( document.getElementById('applet') ) {
+					return;
+				}
+				var me = window.controlObject;
+				me.feedback("Creating applet");
+				me.readVariables();
+				document.body.style.cursor="wait";
+
+				// math random: force the load of the jar
+				var feedBackPath = me.config.DEBUG ? 'window.controlObject.feedback' : 'noop';
+
+				var o;
+				if (/*@cc_on!@*/false || !!document.documentMode) {
+					o = document.createElement("div");
+					o.innerHTML = '<object width="0" height="0" class="signerApplet_hide" id="applet" classid="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93" '
+					  + 'type="application/x-java-applet">'
+					  + '<param name="archive" value="http://ptlis-bpm-fsc/DGEGUploader/JFileUploader.jar?id='+ Math.random() +'"> '
+					  + '<param name="codebase" value="http://ptlis-bpm-fsc/DGEGUploader/JFileUploader.jar?id='+ Math.random() +'"> '
+					  + '<param name="code" value="com.unisys.core.JFileUploaderApplet"> '
+					  + '<param name="callback" value="window.controlObject.appletReady"> '
+					  + '<param name="feedback" value="'+ feedBackPath +'"> '
+					  + '<param name="cooObject" value="'+me.config.inObjCOO+'"> '
+					  + '<param name="serverDir" value="'+me.config.inObjDIR+'"> '
+					  + '<param name="wsUrl" value="'+me.config.inObjWSU+'"> '
+					  + '<param name="wsUrl" value="'+me.config.inObjVIW+'"> '
+					  + '<param name="appletMode" value="0"> '
+					  + '<param name="mayscript" value="true"> '
+					  + '<param name="scriptable" value="true"> '
+					  + '</object>';
+				}
+				else {
+					o = document.createElement("object");
+
+					o.setAttribute('id', 'applet');
+					o.setAttribute('type', 'application/x-java-applet');
+					o.setAttribute('class', 'hide');
+					o.setAttribute('width', '0');
+					o.setAttribute('height', '0');
+					var params = [
+						//{ name: 'archive', value: 'http://localhost/DGEGUploader/JFileUploader.jar?id=' + Math.random() },
+						{ name: 'archive', value: 'http://ptlis-bpm-fsc/DGEGUploader/JFileUploader.jar?id=' + Math.random() },
+						{ name: 'code', value: 'com.unisys.core.JFileUploaderApplet' },
+						{ name: 'callback', value: 'window.controlObject.appletReady' },
+						{ name: 'feedback', value:  feedBackPath},
+						{ name: 'cooObject', value: me.config.inObjCOO },
+						{ name: 'serverDir', value: me.config.inObjDIR },
+						{ name: 'wsUrl', value: me.config.inObjWSU },
+						{ name: 'view', value: me.config.inObjVIW },
+						{ name: 'mayscript', value: 'true' },
+						{ name: 'scriptable', value: 'true' }
+					];
+
+					for (var i = 0; i < params.length; i++) {
+						var e = document.createElement('param');
+						e.setAttribute('name', params[i].name);
+						e.setAttribute('value', params[i].value);
+						o.appendChild(e);
+					}
+				}
+				document.getElementById('appletWrapper').appendChild(o);
+				me.feedback("Initializating applet.");
+			},
+			addFileToList: function(event) {
+				event.preventDefault ? event.preventDefault() : event.returnValue = false;
+				var me = window.controlObject;
+				var selectedFilepath = document.getElementById('applet').BrowseFileSystem();
+				if (selectedFilepath) {
+					if(me.config.fileToUpload == 0) {
+						me.removeNode('noFiles');
+					}
+					me.config.fileToUpload++;
+					me.config.fileCounter++;
+					if (me.config.fileToUpload > 0 && me.config.appletReady) {
+						document.getElementById('sendBtn').removeAttribute('disabled');
+					}
+					me.config.fileDetails[me.config.fileCounter] = selectedFilepath;
+					var selectedFilename = selectedFilepath.substring(selectedFilepath.lastIndexOf('\\') + 1);
+					var id = 'file' + me.config.fileCounter;
+
+					me.createNewFileEntry(id, selectedFilename);
+				}
+			},
+			createNewFileEntry: function(id, filename) {
+				var trElem = document.createElement("tr");
+				trElem.setAttribute('id',id);
+				trElem.setAttribute('class','toUpload');
+
+				var tdElem1 = document.createElement('td');
+				var btnElem = document.createElement('button');
+				btnElem.setAttribute('id',id + '_rem');
+				btnElem.setAttribute('onclick','window.controlObject.removeFileEntry(this)');
+				var btnText = document.createTextNode('Remover');
+				btnElem.appendChild(btnText);
+				tdElem1.appendChild(btnElem);
+				trElem.appendChild(tdElem1);
+
+				var tdElem2 = document.createElement('td');
+				tdElem2.setAttribute('id',id +'_name');
+				tdElem2.setAttribute('class','restrict');
+				var filenameText = document.createTextNode(filename);
+				tdElem2.appendChild(filenameText);
+				trElem.appendChild(tdElem2);
+
+				var tdElem3 = document.createElement('td');
+				tdElem3.setAttribute('id',id + '_stat');
+				var statText = document.createTextNode('Por enviar');
+				tdElem3.appendChild(statText);
+				trElem.appendChild(tdElem3);
+
+				document.getElementById('files').appendChild(trElem);
+			},
+			removeFileEntry: function(element) {
+				var me = window.controlObject;
+				var rowId = element.id.replace('_rem','');
+				me.removeNode(rowId);
+				me.config.fileToUpload--;
+				if (me.config.fileToUpload <= 0) {
+					document.getElementById('sendBtn').setAttribute('disabled', 'disabled');
+					var noFilesMsg = document.createElement("td");
+					noFilesMsg.setAttribute("id","noFiles");
+					noFilesMsg.setAttribute("colspan","3");
+					noFilesMsg.innerHTML = "Nenhum documento selecionado para envio.";
+					document.getElementById('default').appendChild(noFilesMsg);
+				}
+			},
+			uploadFiles: function(event) {
+				event.preventDefault ? event.preventDefault() : event.returnValue = false;
+				var me = window.controlObject;
+				me.startFileTransferUI();
+				var uploadElem = document.getElementById('files').getElementsByTagName('tr');
+				for(var i=0, fileElem; fileElem = uploadElem[i];i++) {
+					if( fileElem.hasAttribute('class') ) {
+						var currId = fileElem.getAttribute('id');
+						document.getElementById(currId + '_stat').firstChild.data = 'A enviar...';
+						var fileIndex = currId.replace("file","");
+						me.feedback("Sending file: " + me.config.fileDetails[fileIndex] +" to "+ me.config.inObjDIR);
+						var boolResponse = document.getElementById('applet').UploadFile(me.config.fileDetails[fileIndex]);
+						me.feedback("Enviado: "+ boolResponse);
+						if (boolResponse) {
+							document.getElementById(currId + '_stat').firstChild.data = 'Enviado' ;
+							fileElem.removeAttribute('class');
+							me.removeNode(currId + '_rem');
+							me.config.fileToUpload--;
+						}
+						else {
+							document.getElementById(currId + '_stat').firstChild.data = 'Por favor, tente novamente.';
+						}
+					}
+				}
+				me.revertFileTransferUI();
+			},
+			startFileTransferUI : function() {
+				var buttons = document.getElementsByTagName('button');
+				for (var i=0, item; item = buttons[i]; i++) {
+				  item.setAttribute('disabled', 'disabled');
+				}
+				document.body.style.cursor="wait";
+			},
+			revertFileTransferUI: function() {
+				var me = window.controlObject;
+				var buttons = document.getElementsByTagName('button');
+				for (var i=0, item; item = buttons[i]; i++) {
+				  item.removeAttribute('disabled');
+				}
+				document.body.style.cursor="auto";
+				if (me.config.fileToUpload <= 0) {
+					document.getElementById('sendBtn').setAttribute('disabled', 'disabled');
+				}
+			},
+			removeNode: function(id) {
+				var element = document.getElementById(id);
+				element.parentNode.removeChild(element);
+			},
+			removeClass: function(id, className) {
+				document.getElementById(id)[0].className = document.getElementById("DIV")[0].className.replace( /(?:^|\s)className(?!\S)/g , '' );
+			},
+			closeWindow: function(event) {
+				event.preventDefault ? event.preventDefault() : event.returnValue = false;
+				self.close();
+			}
+		}
+	}
+	setTimeout(window.controlObject.createApplet, 1000);
+</script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+       
